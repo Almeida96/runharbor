@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>RunHarbor · Agent workspace</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <section id="login" class="login-screen">
+      <div class="login-card">
+        <div class="brand-mark">RH</div>
+        <p class="eyebrow">RUNHARBOR / LOCAL WORKSPACE</p>
+        <h1>Document review,<br />step by step.</h1>
+        <p class="muted">
+          Run document agents, inspect their work, and review the evidence
+          before accepting a report.
+        </p>
+        <form id="login-form">
+          <label for="access-token">Workspace access token</label
+          ><input
+            id="access-token"
+            type="password"
+            required
+            minlength="16"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Use the token from your service environment"
+          /><button class="primary" type="submit">
+            Connect to workspace <span aria-hidden="true">→</span>
+          </button>
+          <p id="login-error" class="error" role="alert"></p>
+        </form>
+        <small
+          >The token stays in this page's memory. Refreshing signs you
+          out.</small
+        >
+      </div>
+      <div class="login-aside">
+        <span class="large-number">01 — 04</span>
+        <h2>Ask. Inspect.<br />Refine. Approve.</h2>
+        <p>
+          A saved checkpoint for every step.<br />A source behind every
+          submitted report.
+        </p>
+        <div class="signal-line"><i></i><i></i><i></i><i></i></div>
+      </div>
+    </section>
+    <div id="app" class="app-shell" hidden>
+      <aside class="sidebar">
+        <a class="brand" href="/" aria-label="RunHarbor home"
+          ><span class="brand-mark">RH</span><strong>RunHarbor</strong></a
+        >
+        <p class="sidebar-label">WORKSPACE</p>
+        <button class="nav-active" id="all-runs">
+          <span aria-hidden="true">▤</span> Runs
+          <span id="sidebar-count">0</span>
+        </button>
+        <div class="sidebar-note">
+          <span class="small-dot"></span
+          ><span>Documents are captured<br />when a run is created.</span>
+        </div>
+        <div class="workspace-card">
+          <p class="sidebar-label">CONNECTED TO</p>
+          <strong id="workspace-name">Workspace</strong>
+          <p id="provider-name"></p>
+          <span id="provider-mode" class="mode-chip"></span>
+        </div>
+        <button id="logout" class="logout">
+          Disconnect <span aria-hidden="true">↗</span>
+        </button>
+        <p class="version">RunHarbor <span id="version"></span></p>
+      </aside>
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">AGENT OPERATIONS</p>
+            <h1>Run workspace<span class="title-dot">.</span></h1>
+          </div>
+          <button id="new-run" class="primary">＋ New run</button>
+        </header>
+        <div id="demo-banner" class="banner" hidden>
+          <strong>Demo provider</strong
+          ><span
+            >Responses are scripted. The queue, tools, checkpoints, and review
+            flow run normally.</span
+          >
+        </div>
+        <div id="notice" class="notice" role="status" hidden></div>
+        <section class="metrics" aria-label="Run overview">
+          <article>
+            <span>Recent runs</span><strong id="total-count">0</strong
+            ><small>Latest 100 in this workspace</small>
+          </article>
+          <article>
+            <span>In progress</span><strong id="active-count">0</strong
+            ><small>Queued or running</small>
+          </article>
+          <article>
+            <span>Awaiting review</span><strong id="review-count">0</strong
+            ><small>Reports ready for your decision</small>
+          </article>
+          <article>
+            <span>Approved</span><strong id="complete-count">0</strong
+            ><small>Completed reports</small>
+          </article>
+        </section>
+        <div class="workbench">
+          <section class="run-list-panel">
+            <div class="section-heading">
+              <h2>Runs</h2>
+              <span id="list-count" class="count-label">0</span>
+            </div>
+            <label class="sr-only" for="search">Search run titles</label
+            ><input
+              id="search"
+              class="search"
+              type="search"
+              placeholder="Search run titles…"
+            /><label class="sr-only" for="status-filter">Filter by status</label
+            ><select id="status-filter">
+              <option value="">All states</option>
+              <option value="RUNNING">Running</option>
+              <option value="QUEUED">Queued</option>
+              <option value="REVIEW">Awaiting review</option>
+              <option value="PAUSED">Paused</option>
+              <option value="COMPLETED">Approved</option>
+              <option value="FAILED">Failed</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+            <div id="run-list" class="run-list"></div>
+            <p id="empty-list" class="empty-copy">
+              No runs yet. Start with a question about the documents in your
+              workspace.
+            </p>
+          </section>
+          <section class="detail-panel" aria-label="Selected run">
+            <div id="empty-detail" class="empty-detail">
+              <div class="empty-icon">↳</div>
+              <p class="eyebrow">YOUR NEXT INVESTIGATION</p>
+              <h2>From a question<br />to a reviewed report.</h2>
+              <p>
+                Create a run to inspect its activity, open source excerpts, and
+                review the finished draft.
+              </p>
+              <button id="empty-new-run" class="secondary">
+                Create your first run
+              </button>
+            </div>
+            <div id="run-detail" hidden>
+              <div class="detail-header">
+                <div>
+                  <div class="detail-kicker">
+                    <span id="run-status" class="badge"></span
+                    ><span id="run-id" class="mono"></span>
+                  </div>
+                  <h2 id="run-title"></h2>
+                  <p id="run-task"></p>
+                </div>
+                <div id="run-actions" class="run-actions"></div>
+              </div>
+              <div class="run-budget">
+                <span id="request-budget"></span><span id="tool-budget"></span
+                ><span id="token-budget"></span>
+              </div>
+              <p id="run-reason" class="run-reason" hidden></p>
+              <div class="tabs" role="tablist" aria-label="Run details">
+                <button
+                  id="tab-activity"
+                  role="tab"
+                  aria-selected="true"
+                  aria-controls="pane-activity"
+                  data-tab="activity"
+                >
+                  Activity <span id="event-count"></span></button
+                ><button
+                  id="tab-report"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="pane-report"
+                  data-tab="report"
+                >
+                  Report</button
+                ><button
+                  id="tab-sources"
+                  role="tab"
+                  aria-selected="false"
+                  aria-controls="pane-sources"
+                  data-tab="sources"
+                >
+                  Sources
+                </button>
+              </div>
+              <section
+                id="pane-activity"
+                class="tab-pane"
+                role="tabpanel"
+                aria-labelledby="tab-activity"
+              >
+                <p class="pane-intro">
+                  Committed events from this run. Model thinking is neither
+                  requested nor stored.
+                </p>
+                <ol id="event-list" class="event-list"></ol>
+              </section>
+              <section
+                id="pane-report"
+                class="tab-pane"
+                role="tabpanel"
+                aria-labelledby="tab-report"
+                hidden
+              >
+                <div id="report-empty" class="empty-copy">
+                  The agent has not submitted a report yet. Follow the Activity
+                  tab to inspect its progress.
+                </div>
+                <div id="report-content" hidden>
+                  <div class="report-toolbar">
+                    <span id="report-state"></span
+                    ><button id="download-report" class="secondary small">
+                      ↓ Export Markdown
+                    </button>
+                  </div>
+                  <h3 id="report-title"></h3>
+                  <div id="report-markdown" class="report-text"></div>
+                  <h3 class="sources-heading">Cited evidence</h3>
+                  <div id="citations"></div>
+                  <div id="review-controls" class="review-controls">
+                    <h3>Ready for a decision?</h3>
+                    <p>
+                      Check the cited excerpts before approving. Valid source
+                      IDs confirm retrieval, not the accuracy of every claim.
+                    </p>
+                    <label for="feedback">Revision feedback</label
+                    ><textarea
+                      id="feedback"
+                      rows="3"
+                      maxlength="4000"
+                      placeholder="What should the agent clarify or change?"
+                    ></textarea>
+                    <div>
+                      <button id="revise-report" class="secondary">
+                        Request revision</button
+                      ><button id="approve-report" class="primary">
+                        Approve report
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </section>
+              <section
+                id="pane-sources"
+                class="tab-pane"
+                role="tabpanel"
+                aria-labelledby="tab-sources"
+                hidden
+              >
+                <p class="pane-intro">
+                  These files were captured when the run was created. Later file
+                  changes do not alter this run.
+                </p>
+                <div id="source-list"></div>
+                <div id="skipped-sources" class="empty-copy"></div>
+              </section>
+            </div>
+          </section>
+        </div>
+        <footer class="footer">
+          <span id="connection-state">Connected</span
+          ><span>Local workspace · Read-only document tools</span>
+        </footer>
+      </main>
+    </div>
+    <dialog id="create-dialog">
+      <form id="create-form">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">NEW INVESTIGATION</p>
+            <h2>Create a run</h2>
+          </div>
+          <button
+            id="close-dialog"
+            class="icon-button"
+            type="button"
+            aria-label="Close dialog"
+          >
+            ×
+          </button>
+        </div>
+        <p class="muted">
+          A new run captures the current workspace and keeps its own execution
+          history.
+        </p>
+        <label for="run-template">Start from a template</label
+        ><select id="run-template">
+          <option value="custom">Custom task</option>
+          <option value="release">Release readiness</option>
+          <option value="incident">Incident response review</option>
+          <option value="onboarding">Onboarding brief</option></select
+        ><label for="new-title">Title</label
+        ><input
+          id="new-title"
+          maxlength="120"
+          required
+          placeholder="Review release readiness"
+        /><label for="new-task">Task</label
+        ><textarea
+          id="new-task"
+          rows="5"
+          maxlength="8000"
+          required
+          placeholder="Describe the question and the evidence you need…"
+        ></textarea>
+        <details class="budget-options">
+          <summary>Execution limits</summary>
+          <div>
+            <label
+              >Model requests<input
+                id="max-requests"
+                type="number"
+                min="1"
+                max="30"
+                value="10"
+                required /></label
+            ><label
+              >Tool calls<input
+                id="max-tools"
+                type="number"
+                min="1"
+                max="80"
+                value="30"
+                required /></label
+            ><label
+              >Reported tokens<input
+                id="max-tokens"
+                type="number"
+                min="100"
+                max="200000"
+                value="40000"
+                required
+            /></label>
+          </div>
+          <small
+            >Token usage is checked after each model response. Request and tool
+            limits are reserved before execution.</small
+          >
+        </details>
+        <p id="create-error" class="error" role="alert"></p>
+        <button class="primary wide" id="submit-run" type="submit">
+          Create and queue run →
+        </button>
+      </form>
+    </dialog>
+  </body>
+</html>

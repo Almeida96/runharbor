@@ -1,0 +1,7 @@
+{
+  "title": "Review release readiness",
+  "task": "Identify deployment prerequisites, rollback conditions, and decision owners. Cite the sources and flag missing information.",
+  "maxRequests": 10,
+  "maxTools": 30,
+  "maxTokens": 40000
+}
